@@ -4,16 +4,23 @@ pipeline {
     
     stages {
 
-         stage('Code Quality') {
-                   steps {
-                       script {
-                          def scannerHome = tool 'sonarqube';
-                          withSonarQubeEnv("sonarqube") {
-                          sh "${tool("sonarqube")}/bin/sonar-scanner"
-                                       }
-                               }
-                           }
-                        }
+        stage('Dependency check') {
+            steps {
+                sh "mvn --batch-mode dependency-check:check"
+            }
+            post {
+                always {
+                    publishHTML(target:[
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'target',
+                        reportFiles: 'dependency-check-report.html',
+                        reportName: "OWASP Dependency Check Report"
+                    ])
+                }
+            }
+        }
 
         stage('Build') {
             steps {
